@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blocky Barrage – Tank Düellosu</title>
+<meta name="description" content="Blocky Barrage: voksel adalarda sıra tabanlı tank topçu oyunu. Nişan al, rüzgârı hesapla, adayı patlat! Android için.">
+<meta property="og:title" content="Blocky Barrage – Tank Duel">
+<meta property="og:description" content="Turn-based tank artillery on blocky islands that crumble block by block.">
+<meta property="og:image" content="img/feature.jpg">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<style>
+  :root {
+    --sky: #7cc6ff; --sky-deep: #2f8fe8; --sea: #1f6fc0; --grass: #6bd13f; --sand: #f3dfa2;
+    --blue: #2e9bff; --orange: #ff8a1a; --ink: #141a24; --ink-soft: #3a4456; --card: #ffffff;
+    --line: rgba(20, 26, 36, .12); --bg: #f4f8ff; --muted: #5b6577;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #eef3fb; --ink-soft: #c5cfdf; --card: #1a2230; --line: rgba(255,255,255,.12); --bg: #0f151f; --muted: #9aa6ba; }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.55; }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: var(--blue); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+  /* top bar */
+  .bar { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--bg) 80%, transparent); border-bottom: 1px solid var(--line); }
+  .bar .wrap { display: flex; align-items: center; gap: 12px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .02em; text-decoration: none; color: var(--ink); }
+  .brand img { width: 36px; height: 36px; border-radius: 9px; }
+  .bar nav { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .bar nav a { text-decoration: none; color: var(--ink-soft); font-weight: 600; font-size: 15px; padding: 8px 10px; border-radius: 8px; }
+  .bar nav a:hover { background: var(--line); }
+  .lang { border: 1px solid var(--line); background: var(--card); color: var(--ink); font-weight: 700; border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+
+  /* hero */
+  .hero { background: linear-gradient(180deg, var(--sky) 0%, #a9dbff 55%, var(--sea) 100%); color: #fff; padding: 56px 0 72px; position: relative; overflow: hidden; }
+  .hero .wrap { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; }
+  .logo { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+  .word { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tile { width: 54px; height: 54px; display: grid; place-items: center; font-weight: 900; font-size: 32px; color: #fff; border-radius: 10px;
+          border: 3px solid #141a24; box-shadow: inset 0 -9px 0 rgba(0,0,0,.22), 3px 5px 0 rgba(0,0,0,.25); text-shadow: 0 2px 0 rgba(0,0,0,.35);
+          animation: bob 2.6s ease-in-out infinite; }
+  .word.b .tile { background: #2e9bff; } .word.r .tile { background: #ff8a1a; width: 50px; height: 50px; font-size: 29px; }
+  .tile:nth-child(odd) { transform: rotate(-3deg); } .tile:nth-child(even) { transform: rotate(3deg); }
+  @keyframes bob { 0%,100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+  .word .tile:nth-child(2) { animation-delay: .15s; } .word .tile:nth-child(3) { animation-delay: .3s; } .word .tile:nth-child(4) { animation-delay: .45s; }
+  .word .tile:nth-child(5) { animation-delay: .6s; } .word .tile:nth-child(6) { animation-delay: .75s; } .word .tile:nth-child(7) { animation-delay: .9s; }
+  @media (prefers-reduced-motion: reduce) { .tile { animation: none; } }
+  .hero h1 { font-size: clamp(22px, 3vw, 30px); margin: 0 0 10px; color: #0d2440; }
+  .hero p.lead { font-size: 18px; margin: 0 0 24px; max-width: 520px; color: #12304f; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .play { display: inline-flex; align-items: center; gap: 12px; background: #141a24; color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 14px; font-weight: 700; border: 2px solid rgba(255,255,255,.25); }
+  .play svg { width: 26px; height: 26px; }
+  .play small { display: block; font-size: 11px; font-weight: 600; opacity: .8; letter-spacing: .04em; text-transform: uppercase; }
+  .play span { line-height: 1.15; }
+  .play.soon { opacity: .92; cursor: default; }
+  .ghost { color: #0d2440; font-weight: 700; text-decoration: none; padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,.55); border: 2px solid rgba(13,36,64,.25); }
+  .phone { justify-self: center; width: min(300px, 80vw); border-radius: 34px; padding: 10px; background: #141a24; box-shadow: 0 30px 60px rgba(0,0,0,.35); transform: rotate(3deg); }
+  .phone img { border-radius: 26px; aspect-ratio: 9/16; object-fit: cover; }
+  .wave { position: absolute; left: 0; right: 0; bottom: -1px; height: 40px; background:
+          linear-gradient(90deg, var(--sand) 0 10%, var(--grass) 10% 30%, var(--sand) 30% 38%, var(--grass) 38% 70%, var(--sand) 70% 78%, var(--grass) 78% 100%);
+          clip-path: polygon(0 60%, 5% 60%, 5% 30%, 12% 30%, 12% 55%, 22% 55%, 22% 20%, 30% 20%, 30% 50%, 41% 50%, 41% 35%, 52% 35%, 52% 60%, 63% 60%, 63% 25%, 72% 25%, 72% 50%, 84% 50%, 84% 30%, 93% 30%, 93% 55%, 100% 55%, 100% 100%, 0 100%); }
+
+  section { padding: 64px 0; }
+  h2 { font-size: clamp(24px, 3.2vw, 32px); margin: 0 0 8px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+  .card .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 12px; border: 2px solid #141a24; box-shadow: inset 0 -5px 0 rgba(0,0,0,.2); }
+  .card .ic svg { width: 24px; height: 24px; fill: #fff; }
+  .card h3 { margin: 0 0 6px; font-size: 18px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .shots { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 4px 16px; }
+  .shots img { width: 220px; flex: 0 0 auto; border-radius: 18px; scroll-snap-align: start; border: 1px solid var(--line); aspect-ratio: 9/16; object-fit: cover; background: #cfe3ff; }
+
+  .faq details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .faq summary { font-weight: 700; cursor: pointer; }
+  .faq p { margin: 10px 0 0; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+  footer nav { margin-left: auto; display: flex; gap: 16px; flex-wrap: wrap; }
+
+  [data-lang="en"] .tr, [data-lang="tr"] .en { display: none !important; }
+
+  @media (max-width: 820px) {
+    .hero .wrap { grid-template-columns: 1fr; }
+    .phone { transform: none; }
+    .features { grid-template-columns: 1fr; }
+    .bar nav a.hide-m { display: none; }
+    .tile { width: 42px; height: 42px; font-size: 25px; } .word.r .tile { width: 39px; height: 39px; font-size: 23px; }
+  }
+</style>
+</head>
+<body data-lang="tr">
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/icon.png" alt="">Blocky Barrage</a>
+    <nav>
+      <a class="hide-m" href="#features"><span class="tr">Özellikler</span><span class="en">Features</span></a>
+      <a class="hide-m" href="#screens"><span class="tr">Görseller</span><span class="en">Screens</span></a>
+      <a class="hide-m" href="privacy-policy.html"><span class="tr">Gizlilik</span><span class="en">Privacy</span></a>
+      <button class="lang" id="langBtn" type="button" aria-label="Language">EN</button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <div class="logo" aria-label="Blocky Barrage">
+          <div class="word b"><div class="tile">B</div><div class="tile">L</div><div class="tile">O</div><div class="tile">C</div><div class="tile">K</div><div class="tile">Y</div></div>
+          <div class="word r"><div class="tile">B</div><div class="tile">A</div><div class="tile">R</div><div class="tile">R</div><div class="tile">A</div><div class="tile">G</div><div class="tile">E</div></div>
+        </div>
+        <h1><span class="tr">Voksel adalarda tank topçu düellosu</span><span class="en">Tank artillery duels on blocky islands</span></h1>
+        <p class="lead">
+          <span class="tr">Namlunu ayarla, rüzgârı hesapla, ateşle! Mermin havada yay çizer, düştüğü yerde adayı blok blok parçalar.</span>
+          <span class="en">Set your angle, read the wind, fire! Your shell arcs through the sky and blasts the island apart block by block.</span>
+        </p>
+        <div class="cta">
+          <!-- When the game is live, replace href="#" with the Play Store link and remove class "soon". -->
+          <a class="play soon" href="#" aria-label="Google Play">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#34A853" d="M3.6 2.2 13.4 12l-9.8 9.8c-.4-.2-.6-.6-.6-1.1V3.3c0-.5.2-.9.6-1.1z"/><path fill="#FBBC04" d="m16.8 15.4-3.4-3.4 3.4-3.4 3.9 2.2c1.1.6 1.1 1.8 0 2.4z"/><path fill="#4285F4" d="M16.8 8.6 13.4 12 3.6 2.2c.3-.1.7-.1 1.1.1z"/><path fill="#EA4335" d="m16.8 15.4-12.1 6.3c-.4.2-.8.2-1.1.1l9.8-9.8z"/></svg>
+            <span><small class="tr">Çok yakında</small><small class="en">Coming soon on</small>Google Play</span>
+          </a>
+          <a class="ghost" href="#features"><span class="tr">Neler var?</span><span class="en">What's inside?</span></a>
+        </div>
+      </div>
+      <div class="phone">
+        <img class="tr" src="img/tr_5_drone.jpg" alt="Kamikaze İHA tanka dalış yapıyor" width="540" height="960">
+        <img class="en" src="img/en_5_drone.jpg" alt="Kamikaze drone diving at a tank" width="540" height="960">
+      </div>
+    </div>
+    <div class="wave"></div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <h2><span class="tr">Oyunda neler var?</span><span class="en">What's in the game?</span></h2>
+      <p class="sub"><span class="tr">Ücretsiz, internetsiz de oynanır, yapay zekâ rakiplere karşı.</span><span class="en">Free, works offline, against AI opponents.</span></p>
+      <div class="features">
+        <div class="card">
+          <div class="ic" style="background:#2e9bff"><svg viewBox="0 0 24 24"><path d="M3 15h18v4H3zM6 11h9v4H6zm9-2 6-3 1 1.6-6 3z"/></svg></div>
+          <h3><span class="tr">Yıkılabilir adalar</span><span class="en">Destructible islands</span></h3>
+          <p><span class="tr">8 arena: tropik koy, kanyon, liman, harabeler, fiyort, volkan, çöl vahası ve her maçta değişen rastgele haritalar.</span><span class="en">8 arenas: tropical bay, canyon, harbour, ruins, fjord, volcano, desert oasis and random maps that change every match.</span></p>
+        </div>
+        <div class="card">
+          <div class="ic" style="background:#ff8a1a"><svg viewBox="0 0 24 24"><path d="M4 18h16v2H4zm2-4h12l-2-4H8zm4-6h4v2h-4z"/></svg></div>
+          <h3><span class="tr">10 tank + atölye</span><span class="en">10 tanks + workshop</span></h3>
+          <p><span class="tr">Namluyu sök, çift namlu, uzun top, roket kovanı veya füze rampası tak. Zırh, yakıt, boya ve blok editörü.</span><span class="en">Unbolt the gun and fit twin guns, a long gun, rockets or a missile launcher. Armor, fuel, paint and a block editor.</span></p>
+        </div>
+        <div class="card">
+          <div class="ic" style="background:#e5383b"><svg viewBox="0 0 24 24"><path d="M12 2 4 20l8-4 8 4z"/></svg></div>
+          <h3><span class="tr">Kamikaze İHA</span><span class="en">Kamikaze UAV</span></h3>
+          <p><span class="tr">Gökyüzünden dalış yapan, asla ıskalamayan destek saldırısı. Her maçta bir kez!</span><span class="en">A support strike that dives from the sky and never misses. Once per match!</span></p>
+        </div>
+        <div class="card">
+          <div class="ic" style="background:#6bd13f"><svg viewBox="0 0 24 24"><path d="M7 4h4v4H7zm6 0h4v4h-4zM7 10h4v4H7zm6 0h4v4h-4zM4 18h16v2H4z"/></svg></div>
+          <h3><span class="tr">Birçok mod</span><span class="en">Many modes</span></h3>
+          <p><span class="tr">1'e 1 düello, 3-4 tanklı herkes herkese karşı, 2'ye 2 takım ve aynı telefonda 2-4 kişi sırayla oynama.</span><span class="en">1v1 duels, 3-4 tank free-for-all, 2v2 teams and pass &amp; play for 2-4 people on one phone.</span></p>
+        </div>
+        <div class="card">
+          <div class="ic" style="background:#8a5cf6"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5v5l4 2-1 1.7-5-2.7V7z"/></svg></div>
+          <h3><span class="tr">Gerçek zamanlı mod</span><span class="en">Real-time mode</span></h3>
+          <p><span class="tr">Sıra beklemeden ateş et, düşman mermilerini havada vur.</span><span class="en">Fire without waiting and shoot enemy shells out of the sky.</span></p>
+        </div>
+        <div class="card">
+          <div class="ic" style="background:#14b8a6"><svg viewBox="0 0 24 24"><path d="M12 3 2 21h20zm0 5 6.5 11h-13z"/></svg></div>
+          <h3><span class="tr">İsabet kamerası</span><span class="en">Hit cam</span></h3>
+          <p><span class="tr">Paleti, motoru ya da cephaneliği vurduğunu gör. Savaş hasarı kalıcı, maçtan sonra tankını tamir ettir.</span><span class="en">See when you knock out tracks, the engine or the ammo rack. Damage sticks: repair your tank after the match.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens" style="padding-top:0">
+    <div class="wrap">
+      <h2><span class="tr">Ekran görüntüleri</span><span class="en">Screenshots</span></h2>
+      <p class="sub"><span class="tr">Kaydırarak bak.</span><span class="en">Swipe to see more.</span></p>
+      <div class="shots tr">
+        <img src="img/tr_1_menu.jpg" alt="Ana menü" loading="lazy" width="540" height="960">
+        <img src="img/tr_2_aim.jpg" alt="Nişan alma" loading="lazy" width="540" height="960">
+        <img src="img/tr_3_modshop.jpg" alt="Modifiye" loading="lazy" width="540" height="960">
+        <img src="img/tr_6_drone_hit.jpg" alt="İHA vuruşu" loading="lazy" width="540" height="960">
+        <img src="img/tr_7_ffa4.jpg" alt="4 tank" loading="lazy" width="540" height="960">
+      </div>
+      <div class="shots en">
+        <img src="img/en_1_menu.jpg" alt="Main menu" loading="lazy" width="540" height="960">
+        <img src="img/en_2_aim.jpg" alt="Aiming" loading="lazy" width="540" height="960">
+        <img src="img/en_3_modshop.jpg" alt="Mod shop" loading="lazy" width="540" height="960">
+        <img src="img/en_6_drone_hit.jpg" alt="Drone strike" loading="lazy" width="540" height="960">
+        <img src="img/en_7_ffa4.jpg" alt="Four tanks" loading="lazy" width="540" height="960">
+      </div>
+    </div>
+  </section>
+
+  <section class="faq" style="padding-top:0">
+    <div class="wrap">
+      <h2><span class="tr">Sık sorulanlar</span><span class="en">FAQ</span></h2>
+      <details>
+        <summary><span class="tr">Oyun ücretsiz mi?</span><span class="en">Is the game free?</span></summary>
+        <p><span class="tr">Evet. Oyun reklam içerir; uygulama içi satın alma yoktur.</span><span class="en">Yes. It contains ads; there are no in-app purchases.</span></p>
+      </details>
+      <details>
+        <summary><span class="tr">İnternet gerekiyor mu?</span><span class="en">Do I need internet?</span></summary>
+        <p><span class="tr">Hayır, rakipler yapay zekâdır ve oyun çevrimdışı oynanır. İnternet yalnızca reklamlar için kullanılır.</span><span class="en">No, opponents are AI and the game works offline. Internet is only used for ads.</span></p>
+      </details>
+      <details>
+        <summary><span class="tr">Arkadaşlarımla oynayabilir miyim?</span><span class="en">Can I play with friends?</span></summary>
+        <p><span class="tr">Evet, aynı telefonda 2-4 kişi sırayla oynayabilir (hot-seat).</span><span class="en">Yes, 2-4 people can take turns on one phone (pass &amp; play).</span></p>
+      </details>
+      <details>
+        <summary><span class="tr">Hangi cihazlarda çalışır?</span><span class="en">Which devices are supported?</span></summary>
+        <p><span class="tr">Android 8.0 ve üzeri telefonlar.</span><span class="en">Phones with Android 8.0 or newer.</span></p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Blocky Barrage</span>
+    <nav>
+      <a href="privacy-policy.html"><span class="tr">Gizlilik Politikası</span><span class="en">Privacy Policy</span></a>
+            <a href="mailto:sebayinteractive@gmail.com"><span class="tr">İletişim</span><span class="en">Contact</span></a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.getElementById('langBtn');
+    function set(lang) {
+      document.body.setAttribute('data-lang', lang);
+      document.documentElement.lang = lang;
+      btn.textContent = lang === 'tr' ? 'EN' : 'TR';
+      try { localStorage.setItem('bb-lang', lang); } catch (e) {}
+    }
+    var saved = null;
+    try { saved = localStorage.getItem('bb-lang'); } catch (e) {}
+    var nav = (navigator.language || 'tr').toLowerCase();
+    set(saved || (nav.indexOf('tr') === 0 ? 'tr' : 'en'));
+    btn.addEventListener('click', function () { set(document.body.getAttribute('data-lang') === 'tr' ? 'en' : 'tr'); });
+  })();
+</script>
+</body>
+</html>
