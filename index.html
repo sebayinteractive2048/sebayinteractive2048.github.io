@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Blocky Barrage – Tank Düellosu</title>
-<meta name="description" content="Blocky Barrage: voksel adalarda sıra tabanlı tank topçu oyunu. Nişan al, rüzgârı hesapla, adayı patlat! Android için.">
+<title>Blocky Barrage – Tank Duel</title>
+<meta name="description" content="Blocky Barrage: turn-based tank artillery on blocky islands. Aim, read the wind, blow the island apart! For Android.">
 <meta property="og:title" content="Blocky Barrage – Tank Duel">
 <meta property="og:description" content="Turn-based tank artillery on blocky islands that crumble block by block.">
 <meta property="og:image" content="img/feature.jpg">
@@ -97,7 +97,7 @@
   }
 </style>
 </head>
-<body data-lang="tr">
+<body data-lang="en">
 
 <header class="bar">
   <div class="wrap">
@@ -106,7 +106,7 @@
       <a class="hide-m" href="#features"><span class="tr">Özellikler</span><span class="en">Features</span></a>
       <a class="hide-m" href="#screens"><span class="tr">Görseller</span><span class="en">Screens</span></a>
       <a class="hide-m" href="privacy-policy.html"><span class="tr">Gizlilik</span><span class="en">Privacy</span></a>
-      <button class="lang" id="langBtn" type="button" aria-label="Language">EN</button>
+      <button class="lang" id="langBtn" type="button" aria-label="Language">TR</button>
     </nav>
   </div>
 </header>
@@ -245,8 +245,7 @@
     }
     var saved = null;
     try { saved = localStorage.getItem('bb-lang'); } catch (e) {}
-    var nav = (navigator.language || 'tr').toLowerCase();
-    set(saved || (nav.indexOf('tr') === 0 ? 'tr' : 'en'));
+    set(saved === 'tr' ? 'tr' : 'en'); // English first; the visitor's choice is remembered
     btn.addEventListener('click', function () { set(document.body.getAttribute('data-lang') === 'tr' ? 'en' : 'tr'); });
   })();
 </script>
